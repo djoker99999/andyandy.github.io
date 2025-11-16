@@ -1511,6 +1511,96 @@
       box-shadow: 0 0 15px rgba(255, 255, 255, 0.7);
       transform: scale(1.1);
     }
+
+    /* Styles pour le panneau de debug */
+    .debug-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 15px;
+      padding: 15px;
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255, 0, 0, 0.3);
+      z-index: 100;
+      max-width: 250px;
+      width: 100%;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+      cursor: move;
+      user-select: none;
+    }
+
+    .debug-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .debug-title {
+      font-size: 1.1em;
+      font-weight: bold;
+      color: #ff6b9d;
+      text-shadow: 0 0 5px rgba(255, 107, 157, 0.5);
+    }
+
+    .close-debug {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.2em;
+      cursor: pointer;
+      padding: 0;
+      width: 25px;
+      height: 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+    }
+
+    .close-debug:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .debug-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .debug-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+      background: linear-gradient(45deg, #ff6b9d, #c44569);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+
+    .debug-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .debug-input {
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 12px;
+    }
+
+    .debug-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
   </style>
 </head>
 <body>
@@ -1518,7 +1608,8 @@
     <div class="menu-item" data-panel="rewardsContainer">🎁 Tableau des gains</div>
     <div class="menu-item" data-panel="lastAttackerPanel">👤 Dernier attaquant</div>
     <div class="menu-item" data-panel="lastRewardContainer">🏆 Dernier gain</div>
-    <div class="menu-item" data-panel="queueContainer">🚀 File d'attente</div> 
+    <div class="menu-item" data-panel="queueContainer">🚀 File d'attente</div>
+    <div class="menu-item" data-panel="debugPanel">🐛 Panneau Debug</div>
     <div class="menu-item" id="resetDataBtn">🔄 Réinitialiser les données</div>
   </div>
 
@@ -1566,6 +1657,22 @@
       <button class="close-queue" id="closeQueueBtn">×</button>
     </div>
     <div class="queue-list" id="queueListBody">
+    </div>
+  </div>
+
+  <!-- NOUVEAU: Panneau de Debug -->
+  <div class="debug-panel" id="debugPanel" style="display: none;">
+    <div class="debug-header">
+      <div class="debug-title">🐛 PANEL DEBUG</div>
+      <button class="close-debug" id="closeDebugBtn">×</button>
+    </div>
+    <div class="debug-controls">
+      <button class="debug-btn" id="forceDropBtn">Forcer DROP</button>
+      <button class="debug-btn" id="forceWinBtn">Forcer Victoire</button>
+      <button class="debug-btn" id="addHpBtn">Ajouter 1000 HP</button>
+      <button class="debug-btn" id="removeHpBtn">Enlever 1000 HP</button>
+      <input type="text" class="debug-input" id="debugPlayerName" placeholder="Nom du joueur">
+      <button class="debug-btn" id="simulateAttackBtn">Simuler Attaque</button>
     </div>
   </div>
 
@@ -1735,6 +1842,16 @@
     const queueListBody = document.getElementById("queueListBody");
     const closeQueueBtn = document.getElementById("closeQueueBtn");
 
+    // Éléments du panneau de debug
+    const debugPanel = document.getElementById("debugPanel");
+    const closeDebugBtn = document.getElementById("closeDebugBtn");
+    const forceDropBtn = document.getElementById("forceDropBtn");
+    const forceWinBtn = document.getElementById("forceWinBtn");
+    const addHpBtn = document.getElementById("addHpBtn");
+    const removeHpBtn = document.getElementById("removeHpBtn");
+    const debugPlayerName = document.getElementById("debugPlayerName");
+    const simulateAttackBtn = document.getElementById("simulateAttackBtn");
+
     const impactEffects = ["💥", "🔥", "⭐", "💫", "✨", "💢"];
 
     // Variables pour TikFinity
@@ -1756,7 +1873,8 @@
       rewardsContainer: { x: 0, y: 0 },
       lastAttackerPanel: { x: 0, y: 0 },
       lastRewardContainer: { x: 0, y: 0 },
-      queueContainer: { x: 0, y: 0 }
+      queueContainer: { x: 0, y: 0 },
+      debugPanel: { x: 0, y: 0 }
     };
 
     // Liste des apparences disponibles
@@ -2241,36 +2359,10 @@
       // Mettre à jour le message
       message.textContent = `💥 ${lastAttackerName} a brisé le diamant magique et gagne ${coinsWon} ! 💎✨`;
       
-      // Pas de popup de victoire, on passe directement au niveau suivant
+      // Afficher la popup de victoire
+      showVictoryPopup();
+      
       comboIndicator.style.display = "none";
-      
-      // Choisir un niveau aléatoire
-      const difficulties = ["noob", "buchette", "easy", "medium", "hard"];
-      const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
-      
-      // Appliquer les coups en trop au nouveau niveau
-      extraHits = Math.abs(currentHP); 
-      
-      // Initialiser le nouveau niveau
-      setTimeout(() => {
-        setDifficulty(randomDifficulty);
-        
-        // Réinitialiser le flag de récompense
-        rewardAlreadyAdded = false;
-        
-        // Appliquer les coups en trop
-        if (extraHits > 0) {
-          currentHP = Math.max(0, currentHP - extraHits);
-          updateUI();
-          
-          if (currentHP <= 0) {
-            // Si les coups en trop ont vaincu le nouveau diamant, recommencer
-            setTimeout(() => {
-              endGame();
-            }, 500);
-          }
-        }
-      }, 1000);
     }
 
     function setAttackMode(mode) {
@@ -2353,6 +2445,7 @@
       combo = 0;
       lastHitTime = 0;
       isAttacking = false;
+      rewardAlreadyAdded = false;
       
       diamond.className = "diamond " + currentDifficulty;
       
@@ -2639,6 +2732,52 @@
         // Afficher une notification
         showNotification("✅ Toutes les données du jeu ont été réinitialisées!", 'success');
       }
+    }
+
+    // =============================================
+    // FONCTIONS POUR LE PANEL DEBUG
+    // =============================================
+
+    function forceDrop() {
+      // Forcer un drop immédiat
+      dropProgress = DROP_TARGET;
+      checkDropSingleHit("Debug");
+      showNotification("🎉 DROP forcé avec succès!", 'success');
+    }
+
+    function forceWin() {
+      // Forcer une victoire immédiate
+      currentHP = 0;
+      endGame();
+      showNotification("🏆 Victoire forcée!", 'success');
+    }
+
+    function addHp() {
+      // Ajouter 1000 HP
+      currentHP += 1000;
+      if (currentHP > maxHP) {
+        currentHP = maxHP;
+      }
+      updateUI();
+      showNotification("❤️ +1000 HP ajoutés!", 'success');
+    }
+
+    function removeHp() {
+      // Enlever 1000 HP
+      currentHP -= 1000;
+      if (currentHP < 0) {
+        currentHP = 0;
+        endGame();
+      } else {
+        updateUI();
+        showNotification("💔 -1000 HP enlevés!", 'warning');
+      }
+    }
+
+    function simulateAttack() {
+      const playerName = debugPlayerName.value || "DebugPlayer";
+      addAttackToQueue(playerName, attackMode, null);
+      showNotification(`⚔️ Attaque simulée pour ${playerName}!`, 'success');
     }
 
     // =============================================
@@ -3042,6 +3181,12 @@
       document.querySelector('.menu-item[data-panel="queueContainer"]').classList.remove('active');
     });
 
+    // Fermer le panneau de debug
+    closeDebugBtn.addEventListener('click', function() {
+      debugPanel.style.display = 'none';
+      document.querySelector('.menu-item[data-panel="debugPanel"]').classList.remove('active');
+    });
+
     // Gestion du menu
     menuBtn.addEventListener('click', toggleMenu);
     
@@ -3056,6 +3201,13 @@
         });
       }
     });
+
+    // Événements pour le panneau de debug
+    forceDropBtn.addEventListener('click', forceDrop);
+    forceWinBtn.addEventListener('click', forceWin);
+    addHpBtn.addEventListener('click', addHp);
+    removeHpBtn.addEventListener('click', removeHp);
+    simulateAttackBtn.addEventListener('click', simulateAttack);
 
     // Raccourcis clavier
     document.addEventListener('keydown', (e) => {
@@ -3134,6 +3286,11 @@
           // Changer l'apparence
           changeAppearance();
           break;
+        case 'p':
+        case 'P':
+          // Afficher/masquer le panneau de debug
+          showPanel('debugPanel');
+          break;
       }
     });
 
@@ -3166,6 +3323,7 @@
     makeDraggable('lastAttackerPanel');
     makeDraggable('lastRewardContainer');
     makeDraggable('queueContainer');
+    makeDraggable('debugPanel');
 
     // Initialiser le panneau du dernier attaquant
     updateLastAttackerPanel("Personne", new Date());
