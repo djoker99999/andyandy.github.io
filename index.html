@@ -1599,7 +1599,7 @@
 
     <div class="appearance-selector" id="appearanceSelector">
       <div class="appearance-btn active" data-appearance="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExamk4MTVrdDF3anBncXc2dGU0bGFzbHdwZmp2aWFyZnVlMjJjaTducCZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/67KsrjDg2bUWI5uyvB/giphy.gif" title="Diamant scintillant"></div>
-      <div class="appearance-btn" data-appearance="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3M3Bwc3Q1cDlocjk1cmRmdzVuYjR2MXV1aTY0eHk5eWZsdHl3N2V3MCZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/mZsbfK4Bu6EgStOS07/giphy.gif" title="Diamant arc-en-ciel"></div>
+      <div class="appearance-btn" data-appearance="https://media.giphy.com/media/v1.Y2lkPWVjZjA1ZTQ3M3Bwc3Q1cDlocjk1cmRmdzVuYjR2MXV1aTY0eHk5eWZsdHl3N2V3MCZlcD12MV9zdGlja2Vyc19zZeadyY2gmY3Q9cw/mZsbfK4Bu6EgStOS07/giphy.gif" title="Diamant arc-en-ciel"></div>
       <div class="appearance-btn" data-appearance="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdG0wajV2dnQ4Nm1kajBnYXVrdTJmaGFnbjF6cHFkb214cm90cXBkZiZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/6xr4bW2csldWKmJkjO/giphy.gif" title="Diamant tourbillonnant"></div>
       <div class="appearance-btn" data-appearance="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdG0wajV2dnQ4Nm1kajBnYXVrdTJmaGFnbjF6cHFkb214cm90cXBkZiZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/DTuTMRAQ4EVGBbtpkg/giphy.gif" title="Diamant énergétique"></div>
       <div class="appearance-btn" data-appearance="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExdG0wajV2dnQ4Nm1kajBnYXVrdTJmaGFnbjF6cHFkb214cm90cXBkZiZlcD12MV9zdGlja2Vyc19zZWFyY2gmY3Q9cw/j0yDs1uIaBD8LrlwId/giphy.gif" title="Diamant psychédélique"></div>
@@ -1687,8 +1687,8 @@
     let dropPool = 0;
     const DROP_TARGET = 100;
     const DROP_REWARD = 5;
-    // MODIFICATION: Tripler les chances de drop (1/333 au lieu de 1/1000)
-    const DROP_CHANCE_MAX = 333;
+    // MODIFICATION: Augmenter les chances de drop 4 fois plus (1/83 au lieu de 1/333)
+    const DROP_CHANCE_MAX = 83;
 
     const diamond = document.getElementById("diamond");
     const message = document.getElementById("message");
@@ -2201,6 +2201,15 @@
       setTimeout(() => {
         victoryPopup.classList.add('active');
       }, 10);
+      
+      // MODIFICATION: Fermer automatiquement après 3 secondes et relancer un nouveau niveau
+      setTimeout(() => {
+        closeVictoryPopup();
+        // Relancer un nouveau niveau
+        const difficulties = ["noob", "buchette", "easy", "medium", "hard"];
+        const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+        setDifficulty(randomDifficulty);
+      }, 3000);
     }
 
     function closeVictoryPopup() {
@@ -2905,7 +2914,7 @@
         dropProgress = 0; // Réinitialiser
         dropPool += DROP_REWARD; // Ajouter au pot
 
-        // Vérifier la chance de jackpot (1 sur 333 au lieu de 1 sur 1000)
+        // MODIFICATION: Augmenter les chances de drop 4 fois plus (1/83 au lieu de 1/333)
         const dropRoll = Math.floor(Math.random() * DROP_CHANCE_MAX);
         if (dropRoll === 0) {
           // JACKPOT!
